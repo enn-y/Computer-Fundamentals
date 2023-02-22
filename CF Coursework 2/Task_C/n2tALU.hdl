@@ -1,0 +1,70 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/ALU.hdl
+
+/**
+ * The n2tALU (Arithmetic Logic Unit). is the ALU designed in the Nand2Tetris project 
+ * Computes one of the following functions:
+ * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
+ * x+1, y+1, x-1, y-1, x&y, x|y on two 16-bit inputs, 
+ * according to 6 input bits denoted zx,nx,zy,ny,f,no.
+ * In addition, the ALU computes two 1-bit outputs:
+ * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
+ * if the ALU output < 0, ng is set to 1; otherwise ng is set to 0.
+ */
+
+// Implementation: the ALU logic manipulates the x and y inputs
+// and operates on the resulting values, as follows:
+// if (zx == 1) set x = 0        // 16-bit constant
+// if (nx == 1) set x = !x       // bitwise not
+// if (zy == 1) set y = 0        // 16-bit constant
+// if (ny == 1) set y = !y       // bitwise not
+// if (f == 1)  set out = x + y  // integer 2's complement addition
+// if (f == 0)  set out = x & y  // bitwise and
+// if (no == 1) set out = !out   // bitwise not
+// if (out == 0) set zr = 1
+// if (out < 0) set ng = 1
+
+CHIP n2tALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute out = x + y (if 1) or x & y (if 0)
+        no; // negate the out output?
+
+    OUT 
+        out[16], // 16-bit output
+        zr, // 1 if (out == 0), 0 otherwise
+        ng; // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+   // Put you code here:
+
+   Mux16(a=x, b=false, sel=zx, out=MuxOut1); // Make x zero
+   Not16(in=MuxOut1, out=notMuxOut1); // Flip the x/ Not the x
+   Mux16(a=y, b=false, sel=zy, out=MuxOut2); // Multiplexer to choose either x or the not x
+
+   Mux16(a=MuxOut1, b=notMuxOut1, sel=nx, out=MuxOut3); // Make y zero
+   Not16(in=MuxOut2, out=notMuxOut2); // Flip the y/ Not the y
+   Mux16(a=MuxOut2, b=notMuxOut2, sel=ny, out=MuxOut4); // Multiplexer to choose either y or not y
+
+   And16(a=MuxOut3, b=MuxOut4, out=AndOut); // To get x&y
+   Add16(a=MuxOut3, b=MuxOut4, out=AddOut); // To get x+y
+   Mux16(a=AndOut, b=AddOut, sel=f, out=MuxOut5); // Multiplexer to choose either x&y or x+y
+
+   Not16(in=MuxOut5, out=fNotOut); // Flip MuxOut5/ Multiplexer that choose from x&y and x+y
+   Mux16(a=MuxOut5, b=fNotOut, sel=no, out=out, out[15]=out7, out[0..7]=FirstOr, out[8..15]=SecondOr); // The bit 15 is the most left bit, hence it is ng
+
+   Or8Way(in=FirstOr, out=OrOut1); // The first 8 is passed into Or8Way, if any input is true then output is true
+   Or8Way(in=SecondOr, out=OrOut2); // The next 8 is passed into another Or8Way
+
+   Or(a=OrOut1, b=OrOut2, out=OrOut3); // Outputs from Or8Way passed into a Or gate
+
+   Not(in=OrOut3, out=zr); // Flip the output, to get zr
+
+   And(a=out7, b=true, out=ng); // to get ng
+}

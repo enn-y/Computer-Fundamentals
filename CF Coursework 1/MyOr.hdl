@@ -1,0 +1,10 @@
+CHIP MyOr{
+IN a,b;
+OUT out;
+
+PARTS:
+// Put your implementation here.
+Nand(a=a, b=a, out=nandout1);               //Or gate requires 3 nand gates. First 2 are parallel to each other
+Nand(a=b, b=b, out=nandout2);               //and are 'Not' gates. 3rd nand gate takes in the output from the 
+Nand(a=nandout1, b=nandout2, out=out);      //first 2 'Not' gates.
+}

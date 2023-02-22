@@ -1,0 +1,9 @@
+CHIP MyAnd{
+IN a, b;
+OUT out;
+
+PARTS:
+// Put your implementation here.
+Nand(a=a, b=b, out=nandout);            //And gate requires 2 nand gates in series. First nand gate accepts 
+Nand(a=nandout, b=nandout, out=out);    //input 'a' and 'b', second nand gate is a not gate which takes in  
+}                                       //result of first nand gate.

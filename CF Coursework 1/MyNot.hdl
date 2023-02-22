@@ -1,0 +1,8 @@
+CHIP MyNot{
+	IN a;
+	OUT out;
+
+	PARTS:
+	Nand(a=a, b=a, out=out); //Not gate only accepts one input, namely 'a', but because of the use of 
+}                            //Nand gate which requires 2 inputs. In this case I use the same input for
+							 //Both a and b which is 'a' hence this creates a Not Gate.

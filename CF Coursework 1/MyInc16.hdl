@@ -1,0 +1,8 @@
+CHIP MyInc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+// Put your implementation here.
+    MyAdd16(a=in,b[0]=true,out=out);    //This line of code is 'MyAdd16.hdl', this is to increment the bits by 1
+}                                       

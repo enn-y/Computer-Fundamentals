@@ -1,0 +1,11 @@
+CHIP MyXor{
+IN a,b;
+OUT out;
+
+PARTS:
+// Put your implementation here.
+Nand(a=a, b=b, out=nandout1);               //Xor Gate requires 4 nand gates. First nand gate accepts a and b 
+Nand(a=a, b=nandout1, out=nandout2);        //inputs, the following 2 nand gates are in parallel and accepts
+Nand(a=b, b=nandout1, out=nandout3);        //a base input and an output from the first nand gate.
+Nand(a=nandout2, b=nandout3, out=out);      //the 4th nand gate accepts the 2 outputs from the previous 2
+}                                           //nand gates in parallel.

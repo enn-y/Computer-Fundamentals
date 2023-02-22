@@ -1,0 +1,27 @@
+CHIP Plant{
+IN a,b,c;
+OUT F;
+
+PARTS:
+// Put your implementation here.
+
+//Starting Boolean expression: A'B'C + A'BC' + A'BC + ABC'
+//1st step: A'(B'C + BC' + BC) + ABC'     //DISTRIBUTIVE LAW
+//2nd step: A'(C(B' + B) + BC') + ABC'    //DISTRIBUTIVE LAW
+//3rd step: A'(C + BC') + ABC'            //INVERSE LAW
+//4th step: A'C + A'BC' + ABC'             
+//5th step: BC'(A' + A) + A'C             //DISTRIBUTIVE LAW               
+//Final Boolean expression: A'C + BC'     //INVERSE LAW
+
+//With the final Boolean expression, A'C + BC', it shows that this task requires 2 Not gates from A' and C',
+//2 And gates from A'C and BC' and 1 Or gate from A'C + BC'
+
+MyNot(a=a, out=Notaout); //Not Gate on a
+MyNot(a=c, out=Notcout); //Not Gate on c
+
+MyAnd(a=Notaout, b=c, out=Andout1); //And Gate on negation of a and c
+
+MyAnd(a=Notcout, b=b, out=Andout2); //And Gate on negation of c and b
+
+MyOr(a=Andout1, b=Andout2, out=F);  //Or Gate on output of first and second And gates
+}

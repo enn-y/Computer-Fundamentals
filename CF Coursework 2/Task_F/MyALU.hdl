@@ -1,0 +1,73 @@
+
+/**
+ * The MyALU. is the ALU of YOUR OWN design that provides the same functions as in the Nand2Tetris project + additional functions (and uses different control bits.
+ * Computes one of the following functions:
+ * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
+ * x+1, y+1, x-1, y-1, x&y, x|y , x XOR y, on two 16-bit inputs, 
+ * according to 6 input bits denoted zx,nx,zy,ny,f,no.
+ * In addition, the ALU computes two 1-bit outputs:
+ * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
+ * if the ALU output < 0, ng is set to 1; otherwise ng is set to 0.
+ */
+
+// Implementation: the ALU logic manipulates the x and y inputs
+
+
+CHIP MyALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        C0, // Control Bit 0 (Least significant) 
+        C1, // Control Bit 1
+        C2, // Control Bit 2
+        C3,  // Control Bit 3
+		C4;  // Control Bit 4 (Most significant - 5th Control bit)
+
+    OUT 
+        out[16], // 16-bit output
+        zr, // 1 if (out == 0), 0 otherwise
+        ng; // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+    // Put you code here:
+    
+    //Functions to get first 8 MyALU outputs
+    Mux16(a=false, out=zero); // 0
+    Inc16(in=false, out=one); // 1
+    Not16(in=zero, out=minus1); // -1
+    Mux16(a=x, out=outx); // x
+    Mux16(a=y, out=outy); // y
+    Not16(in=x, out=notx); // x'
+    Not16(in=y, out=noty); // y'
+    Inc16(in=notx, out=minusx); // -x
+
+    Mux8Way16(a=zero, b=one, c=minus1, d=outx, e=outy, f=notx, g=noty, h=minusx, sel[0]=C0, sel[1]=C1, sel[2]=C2, out=out1); //Mux8Way16 used to take in 8 inputs and have one output according to C0, C1 and C2 selectors
+
+    //Functions to get next 8 MyALU outputs
+    Inc16(in=noty, out=minusy); // -y
+    Inc16(in=outx, out=xplus1); // x+1
+    Inc16(in=outy, out=yplus1); // y+1
+    Add16(a=outx, b=true, out=xminus1); //x-1
+    Add16(a=outy, b=true, out=yminus1); // y-1
+    Add16(a=outx, b=outy, out=xplusy); // x+y
+    Add16(a=outx, b=minusy, out=xminusy); // x-y
+    Add16(a=outy, b=minusx, out=yminusx); //y-x
+
+    Mux8Way16(a=minusy, b=xplus1, c=yplus1, d=xminus1, e=yminus1, f=xplusy, g=xminusy, h=yminusx, sel[0]=C0, sel[1]=C1, sel[2]=C2, out=out2); //Mux8Way16 used to take in 8 inputs and have one output according to C0, C1 and C2 selectors
+    Mux16(a=out1, b=out2, sel=C3, out=out3); // Mux16 used here to combine the outputs of first and second Mux8Way16, This is basically a Mux16Way16, a Mux16Way16 can also be used instead of 2 Mux8Way16 and a Mux16, but i chose to separate it using Mux8Way16 
+
+    //Functions to get the last 3 MyALU outputs
+    And16(a=outx, b=outy, out=xandy); // x and y
+    Or16(a=outx, b=outy, out=xory); // x or y
+    Xor16(a=outx, b=outy, out=xxory); // x xor y
+
+    Mux4Way16(a=xandy, b=xory, c=xxory, d=false, sel[0]=C0, sel[1]=C1, out=out4); // Mux4Way16 is used here to combine the last 3 outputs in accordance to selectors C0 and C1
+
+    Mux16(a=out3, b=out4, sel=C4, out=out, out[15]=outng, out[0..7]=FirstOr, out[8..15]=SecondOr); //Mux16 is used here to combine the first Mux16 output and the Mux4Way16 output to get one output according to C4 selector
+
+    Or8Way(in=FirstOr, out=orout1); // The first 8 is passed into Or8Way, if any input is true then output is true
+    Or8Way(in=SecondOr, out=orout2); // The next 8 is passed into another Or8Way
+    Or(a=orout1, b=orout2, out=orout); // Outputs from Or8Way passed into a Or gate, We want a 1bit output, hence 2 Or8way is used
+    Not(in=orout, out=zr); // Flip the output, to get zr
+
+    And(a=outng, b=true, out=ng); // to get ng
+}

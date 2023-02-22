@@ -1,0 +1,33 @@
+// This file is adapted from part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+
+/**
+ * 8-way 8-bit multiplexor:
+ * out = a if sel == 000
+ *       b if sel == 001
+ *       etc.
+ *       h if sel == 111
+ */
+
+CHIP Mux8Way8 {
+    IN a[8], b[8], c[8], d[8],
+       e[8], f[8], g[8], h[8],
+       sel[3];
+    OUT out[8];
+
+    PARTS:
+
+    //Using the Mux8 CHIP, This is the Mux8Way8. There are 7 multiplexers, first 4 take in 8 8-bit inputs and the next 2 multiplexers take in the 2 outputs and the last multiplexer produces the output.
+    //The binary tree is 4-2-1, from 4 to 2 to 1
+    
+    Mux8(a=a,b=b,sel=sel[0],out=out1);
+    Mux8(a=c,b=d,sel=sel[0],out=out2);
+    Mux8(a=e,b=f,sel=sel[0],out=out3);
+    Mux8(a=g,b=h,sel=sel[0],out=out4);
+
+    Mux8(a=out1,b=out2,sel=sel[1],out=out5);
+    Mux8(a=out3,b=out4,sel=sel[1],out=out6);
+
+    Mux8(a=out5,b=out6,sel=sel[2],out=out);
+}

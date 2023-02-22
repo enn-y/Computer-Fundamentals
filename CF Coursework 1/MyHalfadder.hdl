@@ -1,0 +1,9 @@
+CHIP MyHalfadder{
+IN a,b; // Half adder has 2, 1 bit inputs
+OUT sum, carry; 
+
+PARTS:
+// Put your implementation here.
+    MyXor(a=a, b=b, out=sum);       //Half Adder consists of 1 Xor and 1 And. 
+    MyAnd(a=a, b=b, out=carry);     //Gates used are 'MyXor.hdl' and 'MyAnd'
+}                                           

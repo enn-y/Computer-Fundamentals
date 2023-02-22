@@ -1,0 +1,10 @@
+CHIP MyFulladder{
+IN a,b,c; // Fulladder has 3, 1 bit inputs
+OUT sum, carry; 
+
+PARTS:
+// Put your implementation here.
+    MyHalfadder(a=a, b=b, sum=sumab, carry=carry1);   //A FullAdder requires 2 HalfAdders and 1 Or gate. The first
+    MyHalfadder(a=sumab, b=c, sum=sum, carry=carry2); //2 lines are HalfAdders where the gate is from 
+    MyOr(a=carry1, b=carry2, out=carry);              //'MyHalfadder.hdl'. The 'sum' of FullAdder is from the
+}                                                     //The second HalfAdder. 

@@ -1,0 +1,26 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux.hdl
+
+/** 
+ * Multiplexor:
+ * out = a if sel == 0
+ *       b otherwise
+ */
+
+CHIP Mux {
+    IN a, b, sel;
+    OUT out;
+
+    PARTS:
+    // Put your code here:
+
+    //Multiplexor requires 1 Not gate, 2 And gates and 1 Or gate
+    //To select one output from many lines of input
+
+    Not(in=sel, out=notsel); //Not gate takes in sel as input
+    And(a=sel, b=b, out=out1); //And gate takes in sel as input and b and the other input
+    And(a=notsel, b=a, out=out2); //2nd And gate takes in output of Not and a as the 2 inputs
+    Or(a=out1, b=out2, out=out); //Or gate takes in the 2 outputs of the 2 And gates, checks if either one of the inputs are true
+}
