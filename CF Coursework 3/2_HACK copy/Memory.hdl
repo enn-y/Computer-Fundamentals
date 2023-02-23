@@ -1,0 +1,53 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Memory.hdl
+
+/**
+ * The complete address space of the computer's memory,
+ * including RAM and memory mapped I/O. 
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = Memory[address(t)](t)
+ *     Write: If load(t-1) then Memory[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load=1, the in value is loaded 
+ * into the memory location specified by address. This value becomes 
+ * available through the out output in the next time step.
+ * Address space rules:
+ * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Access to address>0x6000 is invalid. Access to any address in 
+ * the range 0x4000-0x5FFF results in accessing the screen memory 
+ * map. Access to address 0x6000 results in accessing the keyboard 
+ * memory map. The behavior in these addresses is described in the 
+ * Screen and Keyboard chip specifications given in the book.
+ */
+
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+   //put your codes here
+
+    DMux4Way(in=load, sel=address[13..14], a=ramload1, b=ramload2, c=screenload); 
+    Or(a=ramload1, b=ramload2, out=ram);
+
+    RAM16K(in=in, load=ram, address=address[0..13], out=ramout); //Lower 14 bound, when 00 or 01, destination is RAM, hence lower 14 bound is used
+    Screen(in=in, load=screenload, address=address[0..12], out=screenout);
+    Keyboard(out=keyboardout);
+
+    Mux4Way16(a=ramout, b=ramout, c=screenout, d=keyboardout, sel=address[13..14], out=out);
+}
+
+/*
+Memory Boundary Partition
+
+Bit14 Bit13    Bit12-0 
+  0     0      0 0000 0000 0000
+  1     0      0 0000 0000 0000 (Boundary to Screen) (16K) 16K * 1024
+  1     1      0 0000 0000 0000 (Boundary to Keyboard) (24K) 16K * 1024
+
+Or gate is used to always make the inputs of address 13 and 14 true (1)
+*/
+
+

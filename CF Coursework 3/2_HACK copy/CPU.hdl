@@ -1,0 +1,104 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Central Processing unit (CPU).
+ * Consists of an ALU and a set of registers, designed to fetch and 
+ * execute instructions written in the Hack machine language.
+ * In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM=0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time unit. If reset=1 then the 
+ * CPU jumps to address 0 (i.e. sets pc=0 in next time unit) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset=1) or continue executing
+                         // the current program (reset=0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write into M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Implement the CPU based on its following functionalities
+
+    // Instruction decode
+    Mux16(  a=false, //If the MSB is 0 then this is passed and it is all 0's which is A-instruction
+            b=instruction, //If the MSB is 1 then this is passed and it follows the layout of comp=dest;jmp which is C-instruction
+            sel=instruction[15], //The selector is the MSB because it determines whether it is 1 or 0 which determines which instruction is used
+            //If given that the MSB is 1 then the outputs is the following as labeled, else if the MSB is 0 then it is the A-instruction and so
+            out[0]=cinstJGT, //Jump > 0
+            out[1]=cinstJEQ, //Jump = 0
+            out[2]=cinstJLT, //Jump < 0
+            out[3]=writeM, //Write to memory
+            out[4]=DestinationD, //Load bit for D-Register
+            out[5]=DestinationA, //Load bit for A-Register after being fed into Or gate with A-instruction since it is assumed C-instruction from the start
+            out[6]=control6ALUno, //ALU control bit
+            out[7]=control5ALUf, //ALU control bit
+            out[8]=control4ALUny, //ALU control bit
+            out[9]=control3ALUzy, //ALU control bit
+            out[10]=control2ALUnx, //ALU control bit
+            out[11]=control1ALUzx, //ALU control bit
+            out[12]=controlAM, //instruction[12] that chooses whether A or M
+            //13 and 14 are NOT used
+            out[15]=instruction15); //The Most Significant Bit, either 1 or 0
+
+    // A register and input mux
+    Mux16(a=instruction, b=aluOut, sel=instruction15, out=aMuxOut); //This is the input Mux for the A-Register
+
+    Not(in=instruction15, out=Ainstruction); //If instruction MSB is 1 then it is the C-instruction and after not gate, it becomes 0 for A-instruction
+    Or(a=Ainstruction, b=DestinationA, out=loadA); //Load bit for A-register
+    ARegister(in=aMuxOut, load=loadA, out=aRegOut, out[0..14]=addressM); //Aregister output and AddressM output
+
+    // D register
+    DRegister(in=aluOut, load=DestinationD, out=xIn); //For D-Register, it is used to get input "x" for ALU
+
+    // ALU and input mux
+    Mux16(a=aRegOut, b=inM, sel=controlAM, out=yIn); //This is the input Mux is used to get input "y" for ALU
+
+    ALU(x=xIn, 
+        y=yIn,
+        zx=control1ALUzx, //Control 1
+        nx=control2ALUnx, //Control 2
+        zy=control3ALUzy, //Control 3
+        ny=control4ALUny, //Control 4
+        f=control5ALUf, //Control 5
+        no=control6ALUno, //Control 6
+        out=aluOut, 
+        out=outM, //This is outM output
+        zr=zrout, //zr status flag
+        ng=ngout); /ng status flag
+
+    // PC with jump test
+    Or(a=zrout, b=ngout, out=jlejmp); //zr and ng flags are both fed here
+    Not(in=jlejmp, out=jout); 
+
+    //The following jump tests is to get PC load 
+    And(a=cinstJEQ, b=zrout, out=JEQ); 
+    And(a=cinstJLT, b=ngout, out=JLT); 
+    And(a=cinstJGT, b=jout, out=JGT);  
+
+    Or(a=JEQ, b=JLT, out=JLE);
+    Or(a=JLE, b=JGT, out=jmp); //Overall output is jmp that will be fed into the program counter
+
+    PC(in=aRegOut, load=jmp, inc=true, reset=reset, out[0..14]=pc); 
+}
