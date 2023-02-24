@@ -8,4 +8,4 @@
 - Coursework 3:
 - Coursework 4:
 
-https://www.tutorialandexample.com/wp-content/uploads/2019/07/working-of-the-computer-system.jpg
+![alt text](https://www.tutorialandexample.com/wp-content/uploads/2019/07/working-of-the-computer-system.jpg)
